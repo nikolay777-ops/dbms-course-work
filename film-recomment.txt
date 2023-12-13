@@ -1,0 +1,73 @@
+CREATE OR REPLACE FUNCTION recommend_movie(p_user_id BIGINT)
+RETURNS TABLE(movie_id INTEGER, title VARCHAR(100)) AS $$
+DECLARE
+  v_genre_id BIGINT;
+BEGIN
+  -- Найти жанр, который пользователь смотрел наибольшее время
+  SELECT movie_genre.genre_id INTO v_genre_id
+  FROM views
+  JOIN online_movies ON views.online_movie_id = online_movies.id
+  JOIN movies ON online_movies.movie_id = movies.id
+  JOIN movie_genre ON movies.id = movie_genre.movie_id
+  WHERE views.user_id = p_user_id
+  GROUP BY movie_genre.genre_id
+  ORDER BY SUM(view_dur_time) DESC
+  LIMIT 1;
+
+  -- Рекомендовать фильм того же жанра, который пользователь еще не смотрел
+  RETURN QUERY
+  SELECT movies.id, movies.title
+  FROM movies
+  JOIN movie_genre ON movies.id = movie_genre.movie_id
+  WHERE movie_genre.genre_id = v_genre_id
+  AND NOT EXISTS (
+    SELECT 1
+    FROM views
+    JOIN online_movies ON views.online_movie_id = online_movies.id
+    WHERE online_movies.movie_id = movies.id
+    AND views.user_id = p_user_id
+  )
+  LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- NEED TEST 
+
+INSERT INTO age_restrictions (age_restriction) VALUES (1);
+
+INSERT INTO languages (name) VALUES ('English')
+INSERT INTO user_roles (name) VALUES ('User')
+
+-- Добавление жанров
+INSERT INTO genres (name) VALUES ('Комедия'), ('Драма'), ('Триллер');
+
+-- Добавление фильмов
+INSERT INTO movies (title, description, release_date, rating, duration, genre_id, country_id, age_restriction_id) VALUES 
+('Фильм 1', 'Описание 1', '2023-01-01', 7.5, '02:00:00', 1, 1, 2),
+('Фильм 2', 'Описание 2', '2023-02-01', 8.0, '01:30:00', 1, 1, 2),
+('Фильм 3', 'Описание 3', '2023-03-01', 8.5, '02:30:00', 2, 1, 2),
+('Фильм 4', 'Описание 4', '2023-04-01', 9.0, '02:00:00', 3, 1, 2);
+
+-- Добавление онлайн-фильмов
+INSERT INTO online_movies (movie_id, language_id, url, created_at, updated_at) VALUES 
+(13, 1, 'url1', '2023-01-01 00:00:00', '2023-01-01 00:00:00'),
+(14, 1, 'url2', '2023-02-01 00:00:00', '2023-02-01 00:00:00'),
+(15, 1, 'url3', '2023-03-01 00:00:00', '2023-03-01 00:00:00'),
+(16, 1, 'url4', '2023-04-01 00:00:00', '2023-04-01 00:00:00');
+
+-- Добавление пользователей
+INSERT INTO users (first_name, last_name, email, password, contact_num, role_id, age) VALUES 
+('Пользователь 1', 'Фамилия 1', 'email1@example.com', 'password1', '1234567890', 1, 30),
+('Пользователь 2', 'Фамилия 2', 'email2@example.com', 'password2', '0987654321', 1, 25);
+
+-- Добавление просмотров
+INSERT INTO "views" (online_movie_id, user_id, view_time, view_dur_time) VALUES 
+(13, 3, '2023-01-01 01:00:00', '01:30:00'),
+(13, 3, '2023-01-02 01:00:00', '01:00:00'),
+(14, 3, '2023-01-03 01:00:00', '01:30:00'),
+(15, 3, '2023-01-04 01:00:00', '02:00:00'),
+(13, 3, '2023-01-01 01:00:00', '01:00:00'),
+(14, 4, '2023-01-02 01:00:00', '01:30:00'),
+(15, 4, '2023-01-03 01:00:00', '02:00:00'),
+(16, 4, '2023-01-04 01:00:00', '02:30:00');

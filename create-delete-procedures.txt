@@ -1,0 +1,89 @@
+-- Добавление фильма
+CREATE OR REPLACE PROCEDURE add_movie(p_title VARCHAR(100), p_description TEXT, p_release_date DATE, p_rating DECIMAL(2,1), p_duration INTERVAL, p_genre_id BIGINT, p_country_id BIGINT, p_age_restriction_id BIGINT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO movies (title, description, release_date, rating, duration, genre_id, country_id, age_restriction_id) VALUES (p_title, p_description, p_release_date, p_rating, p_duration, p_genre_id, p_country_id, p_age_restriction_id);
+END;
+$$;
+
+-- Удаление фильма
+CREATE OR REPLACE PROCEDURE delete_movie(p_id BIGINT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  DELETE FROM movies WHERE id = p_id;
+END;
+$$;
+
+-- Добавление пользователя
+CREATE OR REPLACE PROCEDURE add_user(p_first_name VARCHAR(50), p_last_name VARCHAR(50), p_email VARCHAR(100), p_password VARCHAR(100), p_contact_num VARCHAR(15), p_role_id BIGINT, p_age INT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO users (first_name, last_name, email, password, contact_num, role_id, age) VALUES (p_first_name, p_last_name, p_email, p_password, p_contact_num, p_role_id, p_age);
+END;
+$$;
+
+-- Удаление пользователя
+CREATE OR REPLACE PROCEDURE delete_user(p_id BIGINT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  DELETE FROM users WHERE id = p_id;
+END;
+$$;
+
+-- Добавление актера
+CREATE OR REPLACE PROCEDURE add_actor(p_first_name VARCHAR(50), p_last_name VARCHAR(50))
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO actors (first_name, last_name) VALUES (p_first_name, p_last_name);
+END;
+$$;
+
+-- Удаление актера
+CREATE OR REPLACE PROCEDURE delete_actor(p_id BIGINT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  DELETE FROM actors WHERE id = p_id;
+END;
+$$;
+
+-- Добавление страны
+CREATE OR REPLACE PROCEDURE add_country(p_name VARCHAR(50))
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO countries (name) VALUES (p_name);
+END;
+$$;
+
+-- Удаление страны
+CREATE OR REPLACE PROCEDURE delete_country(p_id BIGINT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  DELETE FROM countries WHERE id = p_id;
+END;
+$$;
+
+-- Добавление режиссера
+CREATE OR REPLACE PROCEDURE add_director(p_first_name VARCHAR(50), p_last_name VARCHAR(50))
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO directors (first_name, last_name) VALUES (p_first_name, p_last_name);
+END;
+$$;
+
+-- Удаление режиссера
+CREATE OR REPLACE PROCEDURE delete_director(p_id BIGINT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  DELETE FROM directors WHERE id = p_id;
+END;
+$$;

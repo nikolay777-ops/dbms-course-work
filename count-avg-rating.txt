@@ -1,0 +1,6 @@
+CREATE OR REPLACE FUNCTION update_average_rating() RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE movies SET movies.rating = (SELECT AVG(rating) FROM reviews WHERE movie_id = NEW.movie_id) WHERE id = NEW.movie_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
