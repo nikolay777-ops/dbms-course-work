@@ -74,8 +74,7 @@ CREATE TABLE "showtimes" (
   "id" SERIAL PRIMARY KEY,
   "movie_id" INT,
   "hall_id" INT,
-  "startime" TIMESTAMP,
-  "free_seats" INTEGER
+  "startime" DATETIME
 );
 
 CREATE TABLE "tickets" (
@@ -95,16 +94,15 @@ CREATE TABLE "online_movies" (
   "movie_id" INT,
   "language_id" BIGINT,
   "url" TEXT,
-  "created_at" TIMESTAMP,
-  "updated_at" TIMESTAMP
+  "created_at" DATETIME,
+  "updated_at" DATETIME
 );
 
 CREATE TABLE "views" (
   "id" SERIAL PRIMARY KEY,
   "online_movie_id" INT,
-  "view_time" TIMESTAMP,
-  "view_dur_time" INTERVAL,
-  "user_id" BIGINT
+  "view_time" DATETIME,
+  "view_dur_time" DURATION
 );
 
 CREATE TABLE "reviews" (
@@ -112,15 +110,15 @@ CREATE TABLE "reviews" (
   "movie_id" INT,
   "rating" INT,
   "comment" TEXT,
-  "created_at" TIMESTAMP,
-  "updated_at" TIMESTAMP
+  "created_at" DATETIME,
+  "updated_at" DATETIME
 );
 
 CREATE TABLE "payments" (
   "id" SERIAL PRIMARY KEY,
   "reservation_id" INT,
   "payment_method_id" BIGINT,
-  "created_at" TIMESTAMP,
+  "created_at" DATETIME,
   "amount" DECIMAL(5,2)
 );
 
@@ -142,13 +140,11 @@ CREATE TABLE "adv_type" (
   "name" VARCHAR(50) UNIQUE
 );
 
-CREATE TABLE ad_views (
-  id SERIAL PRIMARY KEY,
-  ad_id INTEGER REFERENCES advertisements(id),
-  movie_id INTEGER REFERENCES movies(id),
-  user_id INTEGER REFERENCES users(id),
-  viewed_at TIMESTAMP,
-  successful BOOLEAN
+CREATE TABLE "ad_views" (
+  "id" SERIAL PRIMARY KEY,
+  "adv_id" INT,
+  "view_id" INT,
+  "time" DATETIME
 );
 
 CREATE TABLE "countries" (
@@ -193,23 +189,17 @@ CREATE TABLE "playlist_movies" (
   "id" SERIAL PRIMARY KEY,
   "movie_id" BIGINT,
   "playlist_id" BIGINT,
-  "created_at" TIMESTAMP
+  "created_at" DATETIME
 );
 
 CREATE TABLE "recommendation" (
   "id" SERIAL PRIMARY KEY,
   "user_id" BIGINT,
   "movie_id" BIGINT,
-  "created_at" TIMESTAMP
+  "created_at" DATETIME
 );
 
-ALTER TABLE "users" ADD FOREIGN KEY ("role_id") REFERENCES "user_roles" ("id");
-ALTER TABLE "online_movies" ADD FOREIGN KEY ("language_id") REFERENCES "languages" ("id");
-ALTER TABLE "movies" ADD FOREIGN KEY ("age_restriction_id") REFERENCES "age_restrictions" ("id");
-ALTER TABLE "payments" ADD FOREIGN KEY ("payment_method_id") REFERENCES "payments" ("id");
-ALTER TABLE "seats" ADD FOREIGN KEY ("seat_type_id") REFERENCES "seat_types" ("id");
-ALTER TABLE "recommendation" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
-ALTER TABLE "advertisements" ADD FOREIGN KEY ("type_id") REFERENCES "adv_type" ("id");
+ALTER TABLE "user_roles" ADD FOREIGN KEY ("id") REFERENCES "users" ("role_id");
 
 ALTER TABLE "halls" ADD FOREIGN KEY ("cinema_id") REFERENCES "cinemas" ("id");
 
@@ -227,7 +217,7 @@ ALTER TABLE "reservations" ADD FOREIGN KEY ("id") REFERENCES "users" ("id");
 
 ALTER TABLE "online_movies" ADD FOREIGN KEY ("movie_id") REFERENCES "movies" ("id");
 
-ALTER TABLE "views" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+ALTER TABLE "views" ADD FOREIGN KEY ("id") REFERENCES "users" ("id");
 
 ALTER TABLE "views" ADD FOREIGN KEY ("online_movie_id") REFERENCES "online_movies" ("id");
 
@@ -241,6 +231,8 @@ ALTER TABLE "ad_views" ADD FOREIGN KEY ("adv_id") REFERENCES "advertisements" ("
 
 ALTER TABLE "ad_views" ADD FOREIGN KEY ("view_id") REFERENCES "views" ("id");
 
+ALTER TABLE "languages" ADD FOREIGN KEY ("id") REFERENCES "online_movies" ("language_id");
+
 ALTER TABLE "movie_actor" ADD FOREIGN KEY ("movie_id") REFERENCES "movies" ("id");
 
 ALTER TABLE "movie_actor" ADD FOREIGN KEY ("actor_id") REFERENCES "actors" ("id");
@@ -249,21 +241,35 @@ ALTER TABLE "movie_genre" ADD FOREIGN KEY ("movie_id") REFERENCES "movies" ("id"
 
 ALTER TABLE "movie_genre" ADD FOREIGN KEY ("genre_id") REFERENCES "genres" ("id");
 
+ALTER TABLE "age_restrictions" ADD FOREIGN KEY ("id") REFERENCES "movies" ("age_restriction_id");
+
+ALTER TABLE "payment_methods" ADD FOREIGN KEY ("id") REFERENCES "payments" ("payment_method_id");
+
+ALTER TABLE "seat_types" ADD FOREIGN KEY ("id") REFERENCES "seats" ("seat_type_id");
+
 ALTER TABLE "playlist_movies" ADD FOREIGN KEY ("playlist_id") REFERENCES "playlist" ("id");
 
 ALTER TABLE "playlist_movies" ADD FOREIGN KEY ("movie_id") REFERENCES "movies" ("id");
+
+ALTER TABLE "users" ADD FOREIGN KEY ("id") REFERENCES "recommendation" ("user_id");
+
+ALTER TABLE "movies" ADD FOREIGN KEY ("id") REFERENCES "recommendation" ("movie_id");
+
+ALTER TABLE "adv_type" ADD FOREIGN KEY ("id") REFERENCES "advertisements" ("type_id");
 
 ALTER TABLE "movie_director" ADD FOREIGN KEY ("movie_id") REFERENCES "movies" ("id");
 
 ALTER TABLE "movie_director" ADD FOREIGN KEY ("director_id") REFERENCES "directors" ("id");
 
--- Hash index
-CREATE INDEX idx_movies_title_hash ON movies USING hash(title);
-
+-- B-tree indexes
+CREATE INDEX idx_users_email ON users USING btree(email);
+CREATE INDEX idx_movies_title ON movies USING btree(title);
+CREATE INDEX idx_showtimes_movie_id ON showtimes USING btree(movie_id);
+CREATE INDEX idx_reviews_movie_id ON reviews USING btree(movie_id);
 
 -- Hash index
 CREATE INDEX idx_movies_title_hash ON movies USING hash(title);
 
 -- BRIN index
--- Assuming you have a column for timestamp in views table
-CREATE INDEX idx_views_timestamp ON views USING brin(view_time);
+Assuming you have a column for timestamp in views table
+-- CREATE INDEX idx_views_timestamp ON views USING brin(view_time);

@@ -1,0 +1,37 @@
+-- Триггер на уменьшение свободных мест при покупке билетов
+CREATE OR REPLACE FUNCTION update_seats() RETURNS TRIGGER AS $$
+DECLARE
+  v_total_seats INTEGER;
+BEGIN
+  SELECT total_seats INTO v_total_seats FROM halls WHERE id = NEW.hall_id;
+  IF v_total_seats - 1 >= 0 THEN
+    UPDATE halls SET free_seats = free_seats - 1 WHERE id = NEW.hall_id;
+  ELSE
+    RAISE EXCEPTION 'Недостаточно свободных мест';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_seats_after_insert
+AFTER INSERT ON tickets
+FOR EACH ROW EXECUTE FUNCTION update_seats();
+
+-- Триггер на увеличение свободных мест при возврате билетов
+CREATE OR REPLACE FUNCTION increase_seats() RETURNS TRIGGER AS $$
+DECLARE
+  v_total_seats INTEGER;
+BEGIN
+  SELECT total_seats INTO v_total_seats FROM halls WHERE id = OLD.hall_id;
+  IF v_total_seats + 1 <= v_total_seats THEN
+    UPDATE halls SET free_seats = free_seats + 1 WHERE id = OLD.hall_id;
+  ELSE
+    RAISE EXCEPTION 'Превышено общее количество мест';
+  END IF;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER increase_seats_after_delete
+AFTER DELETE ON tickets
+FOR EACH ROW EXECUTE FUNCTION increase_seats();

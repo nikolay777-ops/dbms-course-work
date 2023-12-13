@@ -1,0 +1,17 @@
+SELECT 
+  ad_id, 
+  COUNT(*) AS total_views, 
+  SUM(CASE WHEN successful THEN 1 ELSE 0 END) AS successful_views,
+  AVG(CASE WHEN successful THEN 1.0 ELSE 0.0 END) AS success_rate
+FROM ad_views
+GROUP BY ad_id;
+
+
+CREATE TABLE ad_views (
+  id SERIAL PRIMARY KEY,
+  ad_id INTEGER REFERENCES ads(id),
+  movie_id INTEGER REFERENCES movies(id),
+  user_id INTEGER REFERENCES users(id),
+  viewed_at TIMESTAMP,
+  successful BOOLEAN
+);
