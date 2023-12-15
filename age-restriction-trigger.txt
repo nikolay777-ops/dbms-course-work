@@ -1,0 +1,30 @@
+CREATE OR REPLACE FUNCTION check_age_restriction()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_user_age INT;
+  v_movie_age_restriction INT;
+BEGIN
+  -- Получить возраст пользователя
+  SELECT age INTO v_user_age
+  FROM users
+  WHERE id = NEW.user_id;
+
+  -- Получить возрастное ограничение фильма
+  SELECT age_restriction INTO v_movie_age_restriction
+  FROM movies m
+  JOIN showtimes s ON m.id = s.movie_id
+  JOIN tickets t ON s.id = t.showtime_id
+  WHERE t.id = NEW.id;
+
+  -- Если возраст пользователя меньше возрастного ограничения фильма, отклонить продажу билета
+  IF v_user_age < v_movie_age_restriction THEN
+    RAISE EXCEPTION 'User is not old enough to watch this movie.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_age_restriction_trigger
+BEFORE INSERT ON tickets
+FOR EACH ROW EXECUTE PROCEDURE check_age_restriction();

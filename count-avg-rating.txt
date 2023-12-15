@@ -1,6 +1,22 @@
-CREATE OR REPLACE FUNCTION update_average_rating() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION update_movie_rating()
+RETURNS TRIGGER AS $$
 BEGIN
-  UPDATE movies SET movies.rating = (SELECT AVG(rating) FROM reviews WHERE movie_id = NEW.movie_id) WHERE id = NEW.movie_id;
+  UPDATE movies
+  SET rating = (SELECT AVG(rating) FROM reviews WHERE movie_id = COALESCE(NEW.movie_id, OLD.movie_id))
+  WHERE id = COALESCE(NEW.movie_id, OLD.movie_id);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER update_movie_rating_trigger
+AFTER INSERT OR DELETE ON reviews
+FOR EACH ROW EXECUTE PROCEDURE update_movie_rating();
+
+INSERT INTO movies (title, description, release_date, rating, duration, genre_id, country_id, age_restriction_id)
+VALUES ('Movie 1', 'Description 1', '2023-01-01', 0, '02:00:00', 1, 1, 1);
+
+INSERT INTO reviews (movie_id, rating, comment, created_at, updated_at)
+VALUES (11, 5, 'Great movie!', NOW(), NOW());
+
+INSERT INTO reviews (movie_id, rating, comment, created_at, updated_at)
+VALUES (11, 4, 'Good movie!', NOW(), NOW());

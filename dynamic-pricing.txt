@@ -1,0 +1,19 @@
+CREATE OR REPLACE FUNCTION dynamic_pricing() RETURNS TRIGGER AS $$
+DECLARE
+    tickets_sold INT;
+BEGIN
+    SELECT COUNT(*) INTO tickets_sold FROM tickets WHERE showtime_id = NEW.showtime_id;
+
+    IF tickets_sold > 50 THEN
+        NEW.price = NEW.price * 1.1;
+    ELSIF tickets_sold < 20 THEN
+        NEW.price = NEW.price * 0.9;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER pricing_trigger
+BEFORE INSERT ON tickets
+FOR EACH ROW EXECUTE PROCEDURE dynamic_pricing();

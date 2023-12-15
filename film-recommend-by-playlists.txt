@@ -14,7 +14,7 @@ BEGIN
   ORDER BY COUNT(*) DESC
   LIMIT 1;
 
-  -- Рекомендовать фильм того же жанра, который пользователь еще не смотрел
+  -- Рекомендовать фильм того же жанра, который пользователь еще не смотрел и который еще не в плейлисте
   RETURN QUERY
   SELECT movies.id, movies.title
   FROM movies
@@ -27,10 +27,16 @@ BEGIN
     WHERE online_movies.movie_id = movies.id
     AND views.user_id = p_user_id
   )
+  AND NOT EXISTS (
+    SELECT 1
+    FROM playlist_movies
+    JOIN playlist ON playlist_movies.playlist_id = playlist.id
+    WHERE playlist_movies.movie_id = movies.id
+    AND playlist.user_id = p_user_id
+  )
   LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;
-
 
 INSERT INTO age_restrictions (age_restriction) VALUES (1);
 INSERT INTO user_roles (name) VALUES ('User')
@@ -40,10 +46,11 @@ INSERT INTO genres (name) VALUES ('Комедия'), ('Драма'), ('Трил�
 
 -- Добавление фильмов
 INSERT INTO movies (title, description, release_date, rating, duration, genre_id, country_id, age_restriction_id) VALUES 
-('Фильм 1', 'Описание 1', '2023-01-01', 7.5, '02:00:00', 10, 1, 1),
-('Фильм 2', 'Описание 2', '2023-02-01', 8.0, '01:30:00', 10, 1, 1),
-('Фильм 3', 'Описание 3', '2023-03-01', 8.5, '02:30:00', 11, 1, 1),
-('Фильм 4', 'Описание 4', '2023-04-01', 9.0, '02:00:00', 12, 1, 1);
+('Фильм 1', 'Описание 1', '2023-01-01', 7.5, '02:00:00', 8, 1, 1),
+('Фильм 2', 'Описание 2', '2023-02-01', 8.0, '01:30:00', 9, 1, 1),
+('Фильм 3', 'Описание 3', '2023-03-01', 8.5, '02:30:00', 10, 1, 1),
+('Фильм 4', 'Описание 4', '2023-04-01', 9.0, '02:00:00', 10, 1, 1),
+('Фильм 5', 'Описание 5', '2023-01-01', 7.5, '02:00:00', 8, 1, 1);
 
 -- Добавление пользователей
 INSERT INTO users (first_name, last_name, email, password, contact_num, role_id, age) VALUES 
@@ -55,18 +62,18 @@ INSERT INTO playlist (user_id, name) VALUES
 (1, 'Плейлист 1'),
 (2, 'Плейлист 2');
 
-
 INSERT INTO movie_genre (movie_id, genre_id) VALUES 
-(17, 10),
-(18, 10),
-(19, 11),
-(20, 12);
+(6, 8),
+(7, 8),
+(8, 9),
+(9, 10),
+(10, 8);
 
 -- Добавление фильмов в плейлисты
 INSERT INTO playlist_movies (movie_id, playlist_id, created_at) VALUES 
-(17, 3, '2023-01-01 00:00:00'),
-(18, 3, '2023-01-02 00:00:00'),
-(19, 4, '2023-01-03 00:00:00'),
-(20, 4, '2023-01-04 00:00:00');
+(6, 1, '2023-01-01 00:00:00'),
+(7, 1, '2023-01-02 00:00:00'),
+(8, 2, '2023-01-03 00:00:00'),
+(9, 2, '2023-01-04 00:00:00');
 
-SELECT * FROM recommend_movie_based_on_playlists(5);
+SELECT * FROM recommend_movie_based_on_playlists(1);

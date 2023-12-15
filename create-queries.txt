@@ -140,7 +140,11 @@ CREATE TABLE "advertisements" (
 CREATE TABLE "adv_type" (
   "id" SERIAL PRIMARY KEY,
   "name" VARCHAR(50) UNIQUE,
+<<<<<<< Updated upstream
   "priority" INT
+=======
+  "priority" BIGINT
+>>>>>>> Stashed changes
 );
 
 CREATE TABLE "ad_views" (
@@ -199,11 +203,25 @@ CREATE TABLE "playlist_movies" (
 CREATE TABLE "recommendation" (
   "id" SERIAL PRIMARY KEY,
   "user_id" BIGINT,
+<<<<<<< Updated upstream
   "movie_id" BIGINT,
   "created_at" DATETIME
 );
 
 ALTER TABLE "user_roles" ADD FOREIGN KEY ("id") REFERENCES "users" ("role_id");
+=======
+  "review_id" BIGINT,
+  "created_at" TIMESTAMP
+);
+
+ALTER TABLE "users" ADD FOREIGN KEY ("role_id") REFERENCES "user_roles" ("id");
+ALTER TABLE "online_movies" ADD FOREIGN KEY ("language_id") REFERENCES "languages" ("id");
+ALTER TABLE "movies" ADD FOREIGN KEY ("age_restriction_id") REFERENCES "age_restrictions" ("id");
+ALTER TABLE "payments" ADD FOREIGN KEY ("payment_method_id") REFERENCES "payments" ("id");
+ALTER TABLE "seats" ADD FOREIGN KEY ("seat_type_id") REFERENCES "seat_types" ("id");
+ALTER TABLE "recommendation" ADD FOREIGN KEY ("review_id") REFERENCES "reviews" ("id");
+ALTER TABLE "advertisements" ADD FOREIGN KEY ("type_id") REFERENCES "adv_type" ("id");
+>>>>>>> Stashed changes
 
 ALTER TABLE "halls" ADD FOREIGN KEY ("cinema_id") REFERENCES "cinemas" ("id");
 
